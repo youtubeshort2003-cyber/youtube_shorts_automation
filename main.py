@@ -14,6 +14,10 @@ def parse_args():
 def main():
     args = parse_args()
 
+    if not 1 <= args.duration <= 60:
+        print("エラー: --duration は1〜60秒の範囲で指定してください（YouTube Shortsの制限）")
+        return
+
     print(f"トピック: {args.topic}")
     print(f"動画の長さ: {args.duration}秒")
 
