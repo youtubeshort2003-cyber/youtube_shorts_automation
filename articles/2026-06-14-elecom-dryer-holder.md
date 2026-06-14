@@ -1,7 +1,7 @@
 ---
 title: "ドライヤーホルダーで両手が空いた。髪を乾かす10分が自由時間に変わった話"
 product_name: "エレコム ドライヤースタンド ホルダー 床置き"
-affiliate_url: "https://www.amazon.jp/dp/B0F5GB2K66"   # ←Amazonアソシエイトのタグ付きリンクに差し替える
+affiliate_url: "https://amzn.to/43v6ld7"
 status: ready
 platform: note
 created: "2026-06-14"
@@ -46,6 +46,6 @@ created: "2026-06-14"
 
 気になった方はこちらからどうぞ。
 
-https://www.amazon.jp/dp/B0F5GB2K66
+https://amzn.to/43v6ld7
 
 ※価格・在庫は変動します。最新情報はリンク先をご確認ください。
