@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import csv
 import random
 from abc import ABC, abstractmethod
 
@@ -66,4 +67,58 @@ class MockDataFeed(DataFeed):
                 for i in range(1, 6)]
         asks = [(round(price + tick * i, 1), int(self._rng.uniform(100, 2000)))
                 for i in range(1, 6)]
+        return {"bids": bids, "asks": asks}
+
+
+class CsvReplayFeed(DataFeed):
+    """CSV の OHLCV を1本ずつ再生する、バックテスト用フィード。
+
+    CSV ヘッダ例（列名は大小文字どちらでも可）:
+        date,open,high,low,close,volume
+    実際の値動きで戦略を検証できる（証券口座・通信不要）。
+    板情報は CSV に無いので、現在値の周辺で簡易生成する。
+    """
+
+    def __init__(self, csv_path: str):
+        self._all: list[Bar] = self._load(csv_path)
+        if not self._all:
+            raise ValueError(f"CSVにデータがありません: {csv_path}")
+        self._cursor = 0
+
+    @staticmethod
+    def _load(path: str) -> list[Bar]:
+        bars: list[Bar] = []
+        with open(path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            lower = {name.lower(): name for name in (reader.fieldnames or [])}
+            for row in reader:
+                bars.append(Bar(
+                    open=float(row[lower["open"]]),
+                    high=float(row[lower["high"]]),
+                    low=float(row[lower["low"]]),
+                    close=float(row[lower["close"]]),
+                    volume=float(row[lower.get("volume", lower["close"])]
+                                 if "volume" in lower else 0.0),
+                ))
+        return bars
+
+    def __len__(self) -> int:
+        return len(self._all)
+
+    def advance(self) -> bool:
+        """カーソルを1本進める。最後まで来たら False。"""
+        if self._cursor >= len(self._all) - 1:
+            return False
+        self._cursor += 1
+        return True
+
+    def get_bars(self, symbol: str, count: int) -> list[Bar]:
+        start = max(0, self._cursor + 1 - count)
+        return self._all[start:self._cursor + 1]
+
+    def get_order_book(self, symbol: str) -> dict:
+        price = self._all[self._cursor].close
+        tick = max(0.1, round(price * 0.001, 1))
+        bids = [(round(price - tick * i, 1), 1000) for i in range(1, 6)]
+        asks = [(round(price + tick * i, 1), 1000) for i in range(1, 6)]
         return {"bids": bids, "asks": asks}

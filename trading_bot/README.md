@@ -46,6 +46,24 @@ export ANTHROPIC_API_KEY=sk-ant-...
 python main.py --symbol 7203 --cash 100000 --cycles 50
 ```
 
+## 実データでバックテスト（口座不要・推奨の検証方法）
+
+モック（ランダムウォーク）は配線確認用で、戦略の良し悪しは測れません。
+実際の値動きで検証するには CSV を流すバックテストを使います。
+
+```bash
+# 1) データを用意（yfinance 利用例。日本株は「コード.T」）
+pip install yfinance
+python fetch_data.py --symbol 7203.T --interval 5m --period 5d --out data/7203.csv
+
+# 2) バックテスト実行（成績レポートが出る）
+python backtest.py --csv data/7203.csv --cash 100000
+```
+
+出力される成績指標: 取引回数 / 勝率 / 確定損益 / 平均勝ち・負け /
+最終評価額 / リターン% / 最大ドローダウン%。
+CSV を自前で用意する場合のヘッダは `date,open,high,low,close,volume`。
+
 ## 安全装置（risk.py）
 
 - `max_order_yen`：1注文の最大金額

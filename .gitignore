@@ -7,3 +7,5 @@ output/
 downloads/
 *.jsonl
 KILL
+trading_bot/data/
+trading_bot/sample.csv
