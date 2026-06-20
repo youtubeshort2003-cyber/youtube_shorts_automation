@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZ-900 Azureサービス マップ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --border: #1e2d45;
+    --azure: #0078d4;
+    --azure-light: #50b0f0;
+    --azure-glow: rgba(0,120,212,0.18);
+    --text: #e8edf5;
+    --muted: #7a8ba3;
+    --accent: #00d4ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  header { text-align: center; margin-bottom: 32px; }
+
+  .logo-badge {
+    display: inline-block;
+    background: var(--azure-glow);
+    border: 1px solid var(--azure);
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--azure-light);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: clamp(20px, 4vw, 32px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  h1 span { color: var(--azure-light); }
+  .subtitle { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  .search-wrap { max-width: 400px; margin: 20px auto; position: relative; }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px 10px 40px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--azure); }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--muted); cursor: pointer;
+    padding: 4px 10px; border-radius: 20px; border: 1px solid transparent; transition: all 0.2s;
+  }
+  .legend-item:hover { border-color: var(--border); color: var(--text); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .tree { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+  .root-node {
+    background: linear-gradient(135deg, #0050a0, #0078d4);
+    border-radius: 12px; padding: 18px 24px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 0 32px rgba(0,120,212,0.3); margin-bottom: 8px;
+  }
+  .root-icon { width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .root-label { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .root-sub { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+
+  .category { border-radius: 10px; border: 1px solid var(--border); overflow: hidden; transition: all 0.3s; }
+  .category.hidden { display: none; }
+
+  .cat-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; cursor: pointer; user-select: none; transition: background 0.2s;
+  }
+  .cat-header:hover { background: rgba(255,255,255,0.03); }
+  .cat-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .cat-title { flex: 1; }
+  .cat-name { font-size: 15px; font-weight: 600; }
+  .cat-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .cat-toggle { font-size: 12px; color: var(--muted); transition: transform 0.3s; }
+  .category.open .cat-toggle { transform: rotate(180deg); }
+  .cat-body { padding: 0 18px 14px 18px; display: none; }
+  .category.open .cat-body { display: block; }
+
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 4px; }
+
+  .service-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+  .service-card:hover { border-color: var(--azure); background: var(--azure-glow); transform: translateY(-1px); }
+  .service-card.highlight { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .svc-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .svc-jp { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .svc-tag {
+    display: inline-block; font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 1px 6px; border-radius: 3px; margin-top: 5px;
+    letter-spacing: 0.05em;
+  }
+  .svc-tap-hint {
+    position: absolute; top: 8px; right: 8px;
+    font-size: 10px; color: var(--muted); opacity: 0.6;
+  }
+
+  .connector { width: 2px; height: 20px; background: linear-gradient(to bottom, var(--azure), transparent); margin: 0 auto; }
+  .no-result { text-align: center; color: var(--muted); padding: 40px; display: none; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #131c2e;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.92) translateY(16px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .modal-cat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .modal-titles { flex: 1; }
+  .modal-svc-name { font-size: 16px; font-weight: 700; line-height: 1.2; }
+  .modal-svc-jp { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .modal-close {
+    background: none; border: none; color: var(--muted);
+    font-size: 20px; cursor: pointer; padding: 0 0 0 8px; line-height: 1;
+    flex-shrink: 0; margin-top: -2px;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }
+
+  .modal-section-label {
+    font-size: 10px; font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px;
+  }
+  .modal-oneliner {
+    font-size: 15px; font-weight: 500; line-height: 1.5; color: var(--text);
+  }
+
+  .keyword-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .keyword-chip {
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid;
+  }
+
+  .exam-tip-box {
+    background: rgba(255,200,0,0.07);
+    border: 1px solid rgba(255,200,0,0.25);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .exam-tip-label { font-size: 10px; color: #f9c700; letter-spacing: 0.08em; font-family: 'JetBrains Mono', monospace; margin-bottom: 5px; }
+  .exam-tip-text { font-size: 13px; color: #e0d0a0; line-height: 1.55; }
+
+  .modal-divider { height: 1px; background: var(--border); }
+
+  @media (max-width: 600px) {
+    .services-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">AZ-900 AZURE FUNDAMENTALS</div>
+  <h1>Azure <span>サービス</span> マップ</h1>
+  <p class="subtitle">カテゴリをタップして展開 · サービスをタップで詳細表示</p>
+</header>
+
+<div class="search-wrap">
+  <span class="search-icon">🔍</span>
+  <input type="text" id="searchInput" placeholder="サービス名で検索（例: VM, Storage...）">
+</div>
+
+<div class="legend" id="legend"></div>
+<div class="connector"></div>
+
+<div class="tree" id="tree">
+  <div class="root-node">
+    <div class="root-icon">☁️</div>
+    <div>
+      <div class="root-label">Microsoft Azure</div>
+      <div class="root-sub">クラウドプラットフォーム — AZ-900出題範囲</div>
+    </div>
+  </div>
+  <div class="connector"></div>
+</div>
+
+<div class="no-result" id="noResult">🔍 該当するサービスが見つかりませんでした</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-cat-icon" id="mCatIcon"></div>
+      <div class="modal-titles">
+        <div class="modal-svc-name" id="mName"></div>
+        <div class="modal-svc-jp" id="mJp"></div>
+      </div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="modal-section-label">💡 一言で言うと</div>
+        <div class="modal-oneliner" id="mOneliner"></div>
+      </div>
+      <div class="modal-divider"></div>
+      <div>
+        <div class="modal-section-label">🔑 試験に出るキーワード</div>
+        <div class="keyword-grid" id="mKeywords"></div>
+      </div>
+      <div class="modal-divider"></div>
+      <div class="exam-tip-box">
+        <div class="exam-tip-label">📝 EXAM TIP</div>
+        <div class="exam-tip-text" id="mExamTip"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const categories = [
+  {
+    id: "compute", icon: "⚙️", name: "コンピューティング", color: "#0078d4",
+    desc: "仮想マシン・コンテナ・サーバーレス",
+    services: [
+      {
+        name: "Azure Virtual Machines", jp: "仮想マシン（IaaS）", tag: "IaaS",
+        oneliner: "クラウド上にWindows/Linuxのサーバーを好きなスペックで立ち上げられるサービス。OSの管理は自分でやる。",
+        keywords: ["IaaS", "仮想マシン", "VM", "スケールセット", "可用性セット"],
+        examTip: "「OSの管理責任が自分にある」「インフラを丸ごとリフトアンドシフト移行したい」という文脈ならVMが正解。スケールセット＝自動スケーリングのVM群。"
+      },
+      {
+        name: "Azure App Service", jp: "Webアプリホスティング", tag: "PaaS",
+        oneliner: "サーバーの管理なしにWebアプリをデプロイできるプラットフォーム。インフラは全部Azureが面倒みる。",
+        keywords: ["PaaS", "Webアプリ", "ホスティング", "サーバーレス", "スケールアップ"],
+        examTip: "「OSやミドルウェアの管理不要でWebアプリを動かしたい」→ App Service。HTTPSやカスタムドメインも自動対応。"
+      },
+      {
+        name: "Azure Kubernetes Service", jp: "コンテナオーケストレーション", tag: "AKS",
+        oneliner: "Dockerコンテナを大量に管理・自動デプロイ・スケーリングするKubernetesのマネージドサービス。",
+        keywords: ["AKS", "コンテナ", "Kubernetes", "オーケストレーション", "Pod"],
+        examTip: "「複数コンテナの自動管理・スケーリング」→ AKS。単発コンテナならACI。"
+      },
+      {
+        name: "Azure Container Instances", jp: "サーバーレスコンテナ", tag: "ACI",
+        oneliner: "Kubernetesなしで1つのコンテナをすぐ起動できる最軽量サービス。管理ゼロ・秒課金。",
+        keywords: ["ACI", "コンテナ", "サーバーレス", "秒課金", "軽量"],
+        examTip: "「すばやくシンプルにコンテナを動かしたい、クラスター不要」→ ACI。"
+      },
+      {
+        name: "Azure Functions", jp: "サーバーレス関数実行", tag: "FaaS",
+        oneliner: "イベントをトリガーにコードのかたまり（関数）だけを実行できる、サーバー管理が一切不要のサービス。",
+        keywords: ["FaaS", "サーバーレス", "トリガー", "イベント駆動", "従量課金"],
+        examTip: "「コードだけ書いてサーバーの管理なし」「使った分だけ課金」→ Functions。"
+      },
+      {
+        name: "Azure Virtual Desktop", jp: "仮想デスクトップ環境", tag: "VDI",
+        oneliner: "クラウド上にWindowsデスクトップ環境を作り、どのデバイスからもブラウザでアクセスできるサービス。",
+        keywords: ["VDI", "仮想デスクトップ", "リモートワーク", "Windows 10マルチセッション"],
+        examTip: "「在宅でも社内PCと同じ環境を使いたい」「BYODでセキュアに業務」→ Azure Virtual Desktop。"
+      },
+      {
+        name: "Azure Batch", jp: "大規模バッチ処理", tag: "Batch",
+        oneliner: "数百〜数千のVMを自動で束ねて、大量の並列ジョブ（バッチ処理）を高速実行するサービス。",
+        keywords: ["バッチ", "並列処理", "HPC", "ジョブスケジューラ"],
+        examTip: "「大規模な並列計算・シミュレーション・レンダリング」という文脈ならBatch。"
+      },
+    ]
+  },
+  {
+    id: "network", icon: "🌐", name: "ネットワーク", color: "#00b294",
+    desc: "接続・配信・セキュリティ",
+    services: [
+      {
+        name: "Azure Virtual Network", jp: "仮想ネットワーク（VNet）", tag: "Core",
+        oneliner: "Azure上でリソース同士をつなぐプライベートネットワーク空間。サブネット分割で通信を制御できる。",
+        keywords: ["VNet", "サブネット", "プライベートIP", "ネットワーク分離", "ピアリング"],
+        examTip: "Azureネットワークの基本単位。「リソースを安全に分離・接続したい」→ VNet。"
+      },
+      {
+        name: "Azure Load Balancer", jp: "L4負荷分散", tag: "LB",
+        oneliner: "TCP/UDPレベルでトラフィックを複数のVMに均等に振り分けるサービス。OSIレイヤー4で動作。",
+        keywords: ["L4", "負荷分散", "TCP", "UDP", "可用性", "ヘルスプローブ"],
+        examTip: "「VMへのトラフィックを分散したい（HTTP以外も含む）」→ Load Balancer。HTTPSの振り分けならApplication Gateway。"
+      },
+      {
+        name: "Azure Application Gateway", jp: "L7負荷分散・WAF", tag: "L7",
+        oneliner: "HTTPSを理解してURLパスやホスト名でルーティングできる高機能LB。WAF機能で攻撃も防御。",
+        keywords: ["L7", "HTTP/HTTPS", "WAF", "URLルーティング", "SSLオフロード"],
+        examTip: "「URLベースのルーティング」「WAFでWebアプリを守る」→ Application Gateway。"
+      },
+      {
+        name: "Azure VPN Gateway", jp: "オンプレVPN接続", tag: "VPN",
+        oneliner: "オンプレミスのネットワークとAzure VNetをインターネット経由の暗号化トンネル（IPsec）でつなぐ。",
+        keywords: ["VPN", "IPsec", "サイト間VPN", "ポイント対サイト", "オンプレミス"],
+        examTip: "「会社ネットワークとAzureを安全につなぐ（インターネット経由）」→ VPN Gateway。専用線ならExpressRoute。"
+      },
+      {
+        name: "Azure ExpressRoute", jp: "専用線接続", tag: "専用線",
+        oneliner: "インターネットを通らず、通信事業者の閉域網でAzureと直接接続する専用線サービス。",
+        keywords: ["専用線", "閉域網", "高帯域", "低レイテンシ", "プライベート接続"],
+        examTip: "「インターネットを使わない、安定した高速接続」「大量データの転送」→ ExpressRoute（コスト高め）。"
+      },
+      {
+        name: "Azure DNS", jp: "ドメインネームサービス", tag: "DNS",
+        oneliner: "ドメイン名をIPアドレスに変換するDNSゾーンをAzure上でホスティングするサービス。",
+        keywords: ["DNS", "名前解決", "ドメイン", "Aレコード", "CNAMEレコード"],
+        examTip: "「ドメイン管理をAzureに統合したい」→ Azure DNS。"
+      },
+      {
+        name: "Azure Content Delivery Network", jp: "CDNキャッシュ配信", tag: "CDN",
+        oneliner: "世界中のエッジサーバーにコンテンツをキャッシュして、ユーザーの近い場所から高速配信するサービス。",
+        keywords: ["CDN", "キャッシュ", "エッジ", "低レイテンシ", "静的コンテンツ"],
+        examTip: "「世界中のユーザーに画像・動画・静的コンテンツを速く届けたい」→ CDN。"
+      },
+      {
+        name: "Azure Traffic Manager", jp: "DNSベース負荷分散", tag: "Global",
+        oneliner: "DNS解決を使ってグローバルなトラフィックをルーティング。地理的に近いリージョンに誘導できる。",
+        keywords: ["DNSルーティング", "グローバル", "地理的ルーティング", "フェイルオーバー"],
+        examTip: "「複数リージョンへのトラフィック振り分け」「障害時の自動フェイルオーバー」→ Traffic Manager。"
+      },
+      {
+        name: "Azure DDoS Protection", jp: "DDoS防御", tag: "Security",
+        oneliner: "大量のリクエストで攻撃するDDoS攻撃からAzureリソースを自動で守るサービス。",
+        keywords: ["DDoS", "攻撃防御", "Basic/Standard", "自動軽減"],
+        examTip: "Basic（無料・自動）とStandard（有料・詳細保護）の2種類がある。"
+      },
+      {
+        name: "Azure Firewall", jp: "クラウドネイティブFW", tag: "FW",
+        oneliner: "VNetのトラフィックをアプリ・ネットワーク・脅威インテリジェンスで制御するマネージドFW。",
+        keywords: ["ファイアウォール", "FW", "アプリルール", "FQDN", "中央集中管理"],
+        examTip: "「VNet全体の通信ポリシーを一元管理したい」→ Azure Firewall。NSGより高機能。"
+      },
+    ]
+  },
+  {
+    id: "storage", icon: "🗄️", name: "ストレージ", color: "#e74856",
+    desc: "データ保存・バックアップ・移行",
+    services: [
+      {
+        name: "Azure Blob Storage", jp: "非構造化データ（オブジェクト）", tag: "Object",
+        oneliner: "画像・動画・ログ・バックアップなど、あらゆる非構造化データをほぼ無制限に保存できるオブジェクトストレージ。",
+        keywords: ["Blob", "オブジェクトストレージ", "Hot/Cool/Archive", "コンテナ", "SAS"],
+        examTip: "「画像や動画をたくさん保存したい」「構造化されていないデータ」→ Blob。アクセス頻度でHot/Cool/Archiveを選ぶ。"
+      },
+      {
+        name: "Azure File Storage", jp: "SMBファイル共有", tag: "File",
+        oneliner: "クラウド上のファイルサーバー。SMBプロトコルで複数のVMから同時マウントして使える。",
+        keywords: ["SMB", "NFS", "ファイル共有", "マウント", "オンプレ移行"],
+        examTip: "「従来のファイルサーバーをクラウドに移行したい」「複数VMで同じファイルを使いたい」→ Files。"
+      },
+      {
+        name: "Azure Queue Storage", jp: "メッセージキュー", tag: "Queue",
+        oneliner: "アプリ間でメッセージを非同期に受け渡すためのシンプルなキューサービス。",
+        keywords: ["キュー", "メッセージ", "非同期", "疎結合", "FIFO"],
+        examTip: "「処理を非同期化・疎結合にしたい」「簡易メッセージング」→ Queue Storage。"
+      },
+      {
+        name: "Azure Table Storage", jp: "NoSQLキーバリュー", tag: "Table",
+        oneliner: "スキーマレスでキーと属性のペアを大量に保存できる、シンプルかつ低コストのNoSQLストレージ。",
+        keywords: ["NoSQL", "キーバリュー", "スキーマレス", "パーティションキー"],
+        examTip: "「構造化だが大量データを安く保存したい」→ Table Storage。複雑なクエリが必要ならCosmos DBへ。"
+      },
+      {
+        name: "Azure Disk Storage", jp: "VM用マネージドディスク", tag: "Disk",
+        oneliner: "VMに取り付けるブロックストレージ（HDDやSSD）。OSディスクやデータディスクとして使用。",
+        keywords: ["マネージドディスク", "SSD", "HDD", "OS disk", "データディスク", "Premium"],
+        examTip: "VMのストレージ＝Disk。「高IOPSが必要」→ Premium SSD。"
+      },
+      {
+        name: "Azure Archive Storage", jp: "低コスト長期保存", tag: "Archive",
+        oneliner: "滅多にアクセスしない大量データを超低コストで長期保存するための最安ストレージ層。",
+        keywords: ["Archive", "低コスト", "長期保存", "リハイドレート", "コンプライアンス"],
+        examTip: "「何年も保存するが読み出しはほぼない」→ Archive。読み出し時間は数時間かかる点に注意。"
+      },
+      {
+        name: "Azure Backup", jp: "バックアップサービス", tag: "Backup",
+        oneliner: "VM・DB・ファイルなどのデータを定期的にバックアップして、障害時に復元できるマネージドサービス。",
+        keywords: ["バックアップ", "Recovery Services Vault", "復元", "保持ポリシー"],
+        examTip: "「データを定期バックアップ・障害時に復元」→ Azure Backup。"
+      },
+      {
+        name: "Azure Site Recovery", jp: "DRレプリケーション", tag: "DR",
+        oneliner: "VM・アプリを別リージョンや別サイトにリアルタイムで複製して、災害時に素早く切り替えられるDRサービス。",
+        keywords: ["DR", "ディザスタリカバリ", "フェイルオーバー", "RTO", "RPO", "レプリケーション"],
+        examTip: "「災害発生時に別リージョンへ素早く切り替えたい（BCP）」→ Site Recovery。"
+      },
+      {
+        name: "Azure Migrate", jp: "オンプレ移行ツール", tag: "Move",
+        oneliner: "オンプレミスのサーバー・DB・Webアプリを評価してAzureへ移行するための統合ハブ。",
+        keywords: ["移行", "オンプレ", "評価", "リフトアンドシフト", "依存関係分析"],
+        examTip: "「オンプレのサーバーをAzureに移したい、何から始めれば？」→ Azure Migrate。"
+      },
+    ]
+  },
+  {
+    id: "database", icon: "🗃️", name: "データベース", color: "#8764b8",
+    desc: "RDB・NoSQL・キャッシュ",
+    services: [
+      {
+        name: "Azure SQL Database", jp: "フルマネージドSQL Server", tag: "SQL",
+        oneliner: "SQL Serverをフルマネージドで使えるDBaaSサービス。パッチ適用・バックアップ・スケーリングが自動。",
+        keywords: ["PaaS", "SQL Server", "リレーショナルDB", "自動バックアップ", "スケーリング"],
+        examTip: "「SQL Serverを使いたいがサーバー管理はしたくない」→ SQL Database。互換性重視ならSQL Managed Instance。"
+      },
+      {
+        name: "Azure SQL Managed Instance", jp: "SQL Server互換マネージド", tag: "SQL MI",
+        oneliner: "オンプレのSQL Server機能をほぼそのままクラウドで使えるマネージドサービス。移行に最適。",
+        keywords: ["SQL MI", "SQL Server互換", "リフトアンドシフト", "SQL Agent", "クロスDB"],
+        examTip: "「オンプレSQL Serverから最小変更でクラウドに移行したい」→ SQL MI。"
+      },
+      {
+        name: "Azure Cosmos DB", jp: "グローバル分散NoSQL", tag: "NoSQL",
+        oneliner: "世界中のリージョンにデータを自動複製して、低レイテンシで読み書きできるグローバルNoSQLDB。",
+        keywords: ["NoSQL", "グローバル分散", "マルチモデル", "低レイテンシ", "スループット"],
+        examTip: "「世界中のユーザーに低レイテンシ」「NoSQLで大規模」→ Cosmos DB。"
+      },
+      {
+        name: "Azure Database for MySQL", jp: "マネージドMySQL", tag: "MySQL",
+        oneliner: "MySQLをフルマネージドで使えるDBaaSサービス。",
+        keywords: ["MySQL", "PaaS", "マネージド", "オープンソースRDB"],
+        examTip: "「MySQLをサーバー管理なしで使いたい」→ Azure Database for MySQL。"
+      },
+      {
+        name: "Azure Database for PostgreSQL", jp: "マネージドPostgreSQL", tag: "PG",
+        oneliner: "PostgreSQLをフルマネージドで使えるDBaaSサービス。",
+        keywords: ["PostgreSQL", "PaaS", "マネージド", "オープンソースRDB"],
+        examTip: "「PostgreSQLをサーバー管理なしで使いたい」→ Azure Database for PostgreSQL。"
+      },
+      {
+        name: "Azure Cache for Redis", jp: "インメモリキャッシュ", tag: "Cache",
+        oneliner: "超高速なインメモリデータストア（Redis）をマネージドで提供。DBの負荷軽減・セッション管理に使う。",
+        keywords: ["Redis", "インメモリ", "キャッシュ", "セッション", "高速"],
+        examTip: "「DBへのクエリを減らして高速化したい」「セッションデータを保持」→ Cache for Redis。"
+      },
+      {
+        name: "Azure Synapse Analytics", jp: "データウェアハウス", tag: "DWH",
+        oneliner: "大量データの分析特化型DBサービス。ETLからBIまで一気通貫で扱える統合分析プラットフォーム。",
+        keywords: ["DWH", "データウェアハウス", "ビッグデータ", "SQL Pool", "分析"],
+        examTip: "「PBレベルの大量データを分析したい」「BIツールと連携したい」→ Synapse Analytics。"
+      },
+    ]
+  },
+  {
+    id: "identity", icon: "🪪", name: "ID・認証", color: "#038387",
+    desc: "認証・アクセス管理・SSO",
+    services: [
+      {
+        name: "Microsoft Entra ID", jp: "旧Azure AD・クラウドIdP", tag: "Core",
+        oneliner: "AzureとMicrosoft 365の認証・ID管理の中核サービス。SSOや多要素認証を一元管理する。",
+        keywords: ["Entra ID", "Azure AD", "SSO", "シングルサインオン", "テナント", "ディレクトリ"],
+        examTip: "AzureのID基盤＝Entra ID（旧Azure AD）。旧称も試験に出る。Active DirectoryはオンプレのADと混同しないこと。"
+      },
+      {
+        name: "Azure Multi-Factor Auth", jp: "多要素認証（MFA）", tag: "MFA",
+        oneliner: "パスワード＋スマホアプリ通知などの2つ以上の認証要素でアカウントを守るセキュリティ機能。",
+        keywords: ["MFA", "多要素認証", "二要素認証", "Authenticatorアプリ", "OTP"],
+        examTip: "「アカウント乗っ取りリスクを下げる」→ MFA。「Something you know / have / are」の3要素が頻出。"
+      },
+      {
+        name: "Azure AD B2C", jp: "外部ユーザー向けID管理", tag: "B2C",
+        oneliner: "消費者向けアプリ（BtoC）のユーザー認証をGoogleやFacebookアカウントも含めて管理するサービス。",
+        keywords: ["B2C", "外部ユーザー", "ソーシャルログイン", "カスタマーID"],
+        examTip: "「自社アプリに外部ユーザー（一般消費者）をサインインさせたい」→ B2C。社外ビジネスパートナーならB2B。"
+      },
+      {
+        name: "Azure AD B2B", jp: "ゲストユーザーコラボ", tag: "B2B",
+        oneliner: "他社のMicrosoftアカウントを持つビジネスパートナーを自社テナントに招待してコラボするサービス。",
+        keywords: ["B2B", "ゲストユーザー", "外部コラボ", "招待"],
+        examTip: "「取引先・パートナー企業のユーザーと安全に共同作業したい」→ B2B。"
+      },
+      {
+        name: "Privileged Identity Mgmt", jp: "特権IDの一時付与・管理", tag: "PIM",
+        oneliner: "管理者権限を常時付与せず、必要なときだけ一時的に昇格できるゼロトラスト型の特権管理サービス。",
+        keywords: ["PIM", "特権ID", "JIT", "Just-in-Time", "最小権限", "承認フロー"],
+        examTip: "「管理者権限を常時持たせず、作業時だけ一時的に付与（JIT）」→ PIM。"
+      },
+      {
+        name: "Conditional Access", jp: "条件付きアクセスポリシー", tag: "Zero Trust",
+        oneliner: "ユーザーの場所・デバイス・リスクに応じてアクセスを許可/ブロック/MFA要求する柔軟なポリシー。",
+        keywords: ["条件付きアクセス", "ゼロトラスト", "場所", "デバイス", "リスクベース"],
+        examTip: "「社外ネットワークからのアクセスはMFAを要求する」→ Conditional Access。"
+      },
+    ]
+  },
+  {
+    id: "security", icon: "🛡️", name: "セキュリティ", color: "#f7630c",
+    desc: "脅威検知・コンプライアンス・暗号化",
+    services: [
+      {
+        name: "Microsoft Defender for Cloud", jp: "セキュリティ態勢管理", tag: "CSPM",
+        oneliner: "Azure全体のセキュリティ状態をスコア化して可視化し、脆弱な設定を検出・修正提案するサービス。",
+        keywords: ["CSPM", "セキュリティスコア", "脅威検知", "コンプライアンス", "推奨事項"],
+        examTip: "「Azureリソースのセキュリティ状態を一元把握・改善したい」→ Defender for Cloud。"
+      },
+      {
+        name: "Azure Key Vault", jp: "鍵・シークレット管理", tag: "KMS",
+        oneliner: "パスワード・APIキー・証明書・暗号化キーをアプリのコードから切り離して安全に管理するサービス。",
+        keywords: ["Key Vault", "シークレット", "暗号化キー", "証明書", "HSM", "アクセスポリシー"],
+        examTip: "「接続文字列やAPIキーをコードに書きたくない」→ Key Vault。"
+      },
+      {
+        name: "Azure Sentinel", jp: "クラウドSIEM", tag: "SIEM",
+        oneliner: "組織全体のログを収集・AIで分析して脅威を自動検出・対応するクラウドネイティブSIEMサービス。",
+        keywords: ["SIEM", "SOAR", "ログ分析", "インシデント", "脅威インテリジェンス"],
+        examTip: "「大量のセキュリティログを一元管理・AI分析したい」→ Sentinel。"
+      },
+      {
+        name: "Microsoft Defender for Identity", jp: "AD脅威検知", tag: "MDI",
+        oneliner: "オンプレAD/Entra IDへの不審なサインインや攻撃行動をAIで検出・アラートするサービス。",
+        keywords: ["MDI", "ID脅威", "AD攻撃検知", "Pass-the-Hash", "ラテラルムーブメント"],
+        examTip: "「ADへの攻撃（Pass-the-Hashなど）を検知したい」→ Defender for Identity。"
+      },
+      {
+        name: "Azure Policy", jp: "リソースコンプライアンス", tag: "Gov",
+        oneliner: "「特定リージョン以外にリソースを作れない」などのルールを組織全体に強制するポリシーサービス。",
+        keywords: ["Azure Policy", "コンプライアンス", "ガードレール", "デプロイ制限", "組み込みポリシー"],
+        examTip: "「組織のルール（ポリシー）を強制適用したい」→ Azure Policy。RBACはアクセス制御、Policyはリソース設定の制御。"
+      },
+      {
+        name: "Azure Blueprints", jp: "環境テンプレート", tag: "Template",
+        oneliner: "ARMテンプレート・RBAC・Policyをまとめた「環境の設計図」として、新しい環境を一括構築できるサービス。",
+        keywords: ["Blueprints", "テンプレート", "ガバナンス", "環境標準化", "アーティファクト"],
+        examTip: "「新しいサブスクリプション環境を毎回同じ設定で構築したい」→ Blueprints。"
+      },
+    ]
+  },
+  {
+    id: "monitoring", icon: "📊", name: "監視・管理", color: "#00b7c3",
+    desc: "ログ・メトリクス・コスト管理",
+    services: [
+      {
+        name: "Azure Monitor", jp: "統合監視プラットフォーム", tag: "Core",
+        oneliner: "Azureリソースのメトリクスとログをリアルタイムで収集・可視化し、アラートを発火する監視の中核。",
+        keywords: ["Azure Monitor", "メトリクス", "ログ", "アラート", "ダッシュボード"],
+        examTip: "Azure監視の最上位。Log Analyticsワークスペースと組み合わせてログを分析する。"
+      },
+      {
+        name: "Azure Log Analytics", jp: "ログクエリ・分析", tag: "Logs",
+        oneliner: "Azureや外部リソースのログをKQLクエリで検索・集計・分析するログ分析ワークスペース。",
+        keywords: ["Log Analytics", "KQL", "ワークスペース", "ログ収集", "クエリ"],
+        examTip: "「ログをクエリして分析したい」→ Log Analytics。Azure Monitorの配下にある。"
+      },
+      {
+        name: "Application Insights", jp: "アプリパフォーマンス監視", tag: "APM",
+        oneliner: "Webアプリのレスポンスタイム・エラー・依存関係をリアルタイムで監視するAPMサービス。",
+        keywords: ["APM", "パフォーマンス", "応答時間", "例外", "依存関係", "ライブメトリクス"],
+        examTip: "「アプリの動作状態・遅延・エラーをコードレベルで監視したい」→ Application Insights。"
+      },
+      {
+        name: "Azure Advisor", jp: "最適化推奨レコメンド", tag: "Advisor",
+        oneliner: "コスト・パフォーマンス・セキュリティ・信頼性・オペレーションの観点からリソース改善案を提案するAIアドバイザー。",
+        keywords: ["Advisor", "推奨事項", "コスト最適化", "セキュリティ", "信頼性"],
+        examTip: "「Azureリソースの無駄や問題を自動検出・改善提案」→ Advisor。5つのカテゴリ（コスト/パフォーマンス/信頼性/セキュリティ/オペレーション）が頻出。"
+      },
+      {
+        name: "Azure Service Health", jp: "Azureサービス障害情報", tag: "Health",
+        oneliner: "Azureの障害・計画メンテナンス・自分のリソースへの影響をリアルタイムで確認できるダッシュボード。",
+        keywords: ["Service Health", "障害情報", "メンテナンス", "正常性アラート"],
+        examTip: "「Azureが障害かな？今のステータスは？」→ Service Health。"
+      },
+      {
+        name: "Azure Cost Management", jp: "コスト可視化・予算管理", tag: "Cost",
+        oneliner: "Azureの利用コストをサービス・リソース・部門別に分析し、予算アラートで超過を防ぐサービス。",
+        keywords: ["コスト管理", "予算", "コスト分析", "アラート", "タグ", "請求書"],
+        examTip: "「月のAzure費用を把握・制御したい」→ Cost Management。タグと組み合わせて部門別コスト管理もできる。"
+      },
+      {
+        name: "Azure Resource Manager", jp: "リソース管理基盤（ARM）", tag: "ARM",
+        oneliner: "AzureのリソースをAPIで一貫して管理するための制御プレーン。ARMテンプレートでインフラをコード化できる。",
+        keywords: ["ARM", "IaC", "ARMテンプレート", "デプロイ", "制御プレーン", "リソースプロバイダー"],
+        examTip: "Azure管理の基盤レイヤー。「インフラをコードで管理（IaC）」→ ARMテンプレートまたはBicep。"
+      },
+    ]
+  },
+  {
+    id: "governance", icon: "🏛️", name: "ガバナンス・組織", color: "#5c2d91",
+    desc: "管理グループ・サブスクリプション・RBAC",
+    services: [
+      {
+        name: "Management Groups", jp: "サブスクリプション上位グループ", tag: "Org",
+        oneliner: "複数のサブスクリプションをまとめて階層管理するコンテナ。ポリシーやRBACを一括適用できる最上位の器。",
+        keywords: ["管理グループ", "階層", "サブスクリプション管理", "ポリシー継承"],
+        examTip: "管理階層：管理グループ＞サブスクリプション＞リソースグループ＞リソース。この順番は頻出。"
+      },
+      {
+        name: "Azure Subscriptions", jp: "課金・リソースの論理境界", tag: "Billing",
+        oneliner: "Azureリソースの課金単位かつ論理的な境界線。環境（本番/開発）や部門ごとにサブスクリプションを分けることが多い。",
+        keywords: ["サブスクリプション", "課金", "論理境界", "無料試用版", "Pay-As-You-Go"],
+        examTip: "「課金をどう分けるか」「環境をどう分離するか」→ サブスクリプション境界で管理。"
+      },
+      {
+        name: "Resource Groups", jp: "リソースの論理コンテナ", tag: "RG",
+        oneliner: "一緒に管理したいAzureリソースを束ねるフォルダのようなもの。作成・削除・権限付与をまとめてできる。",
+        keywords: ["リソースグループ", "RG", "ライフサイクル", "タグ", "論理コンテナ"],
+        examTip: "同じライフサイクルのリソースを同じRGに入れるのがベストプラクティス。RG削除で中のリソースも全削除。"
+      },
+      {
+        name: "Role-Based Access Control", jp: "ロールベースアクセス制御", tag: "RBAC",
+        oneliner: "「誰が」「どのリソースに」「何をできるか」をロール（役割）で定義するアクセス制御の仕組み。",
+        keywords: ["RBAC", "Owner", "Contributor", "Reader", "最小権限", "スコープ"],
+        examTip: "組み込みロール3種：Owner（全権）＞ Contributor（権限管理除く）＞ Reader（読み取りのみ）。スコープ＝適用範囲。"
+      },
+      {
+        name: "Azure Tags", jp: "リソースへのメタデータ付与", tag: "Tags",
+        oneliner: "リソースに「環境:本番」「部門:経理」などのラベルを貼って、コスト管理や検索を楽にする機能。",
+        keywords: ["タグ", "キーバリュー", "コスト配賦", "フィルタリング", "メタデータ"],
+        examTip: "タグは継承されない（親RGのタグは子リソースに自動適用されない）。Azure Policyで強制付与可能。"
+      },
+      {
+        name: "Azure Locks", jp: "誤削除防止ロック", tag: "Lock",
+        oneliner: "重要なリソースを誰かが誤って削除・変更しないよう保護するロック機能。",
+        keywords: ["Lock", "CanNotDelete", "ReadOnly", "誤削除防止", "保護"],
+        examTip: "CanNotDelete（削除不可・変更OK）と ReadOnly（削除も変更も不可）の2種類。Ownerでも削除にはロック解除が必要。"
+      },
+    ]
+  },
+  {
+    id: "ai", icon: "🤖", name: "AI・機械学習", color: "#498205",
+    desc: "認知サービス・ML・ボット",
+    services: [
+      {
+        name: "Azure AI Services", jp: "旧Cognitive Services統合", tag: "AI",
+        oneliner: "画像認識・音声認識・翻訳・顔認識など、機械学習の知識なしにAPIで使える事前学習済みAI群。",
+        keywords: ["AI Services", "Cognitive Services", "Vision", "Speech", "翻訳", "事前学習済みAPI"],
+        examTip: "「コードだけでAIを使いたい、モデル訓練不要」→ AI Services。"
+      },
+      {
+        name: "Azure Machine Learning", jp: "MLモデル開発・デプロイ", tag: "ML",
+        oneliner: "カスタムMLモデルを開発・学習・評価・デプロイするためのフルサイクルMLOpsプラットフォーム。",
+        keywords: ["Azure ML", "MLOps", "モデル学習", "デプロイ", "AutoML", "パイプライン"],
+        examTip: "「自社データでオリジナルモデルを作り込みたい」→ Azure ML。"
+      },
+      {
+        name: "Azure Bot Service", jp: "チャットボット構築", tag: "Bot",
+        oneliner: "Teams・WebChat・LINEなど複数チャンネルに対応したチャットボットを構築・デプロイするサービス。",
+        keywords: ["Bot", "チャットボット", "Bot Framework", "Teams連携", "マルチチャンネル"],
+        examTip: "「カスタマーサポートのチャットボットを作りたい」→ Bot Service。"
+      },
+      {
+        name: "Azure OpenAI Service", jp: "GPT等大規模言語モデル", tag: "LLM",
+        oneliner: "GPT-4などOpenAIの大規模言語モデルをAzureのセキュリティ・コンプライアンス環境で利用できるサービス。",
+        keywords: ["OpenAI", "GPT", "大規模言語モデル", "LLM", "Copilot", "生成AI"],
+        examTip: "「GPTをエンタープライズセキュリティ（データ非学習保証）で使いたい」→ Azure OpenAI Service。"
+      },
+      {
+        name: "Azure Cognitive Search", jp: "AIパワード検索", tag: "Search",
+        oneliner: "独自データにAI（OCR・翻訳・エンティティ抽出）を組み合わせてインテリジェントな全文検索を構築するサービス。",
+        keywords: ["検索", "フルテキスト検索", "AI検索", "インデックス", "ナレッジマイニング"],
+        examTip: "「PDFや画像を含む社内文書を横断検索したい」→ Cognitive Search。"
+      },
+    ]
+  },
+  {
+    id: "devtools", icon: "🔧", name: "開発者ツール・統合", color: "#ca5010",
+    desc: "DevOps・メッセージング・API",
+    services: [
+      {
+        name: "Azure DevOps", jp: "CI/CDパイプライン", tag: "DevOps",
+        oneliner: "コード管理からビルド・テスト・デプロイまでを自動化するDevOpsツール群（Boards・Repos・Pipelines含む）。",
+        keywords: ["CI/CD", "パイプライン", "Repos", "Boards", "Artifacts", "継続的デリバリー"],
+        examTip: "「コードをプッシュしたら自動でテスト・デプロイ（CI/CD）」→ Azure DevOps または GitHub Actions。"
+      },
+      {
+        name: "GitHub Actions", jp: "GitHub連携ワークフロー", tag: "CI/CD",
+        oneliner: "GitHubのイベント（push・PR）をトリガーにAzureへのデプロイなどを自動実行するワークフロー機能。",
+        keywords: ["GitHub Actions", "ワークフロー", "YAML", "トリガー", "CI/CD"],
+        examTip: "「GitHubリポジトリからAzureへ直接デプロイしたい」→ GitHub Actions。"
+      },
+      {
+        name: "Azure Service Bus", jp: "エンタープライズメッセージング", tag: "MQ",
+        oneliner: "アプリ間のメッセージを確実に届けるエンタープライズ向けメッセージブローカー。順序保証・デッドレター対応。",
+        keywords: ["Service Bus", "メッセージキュー", "トピック", "サブスクリプション", "デッドレター"],
+        examTip: "「確実に・1回だけ・順序通りにメッセージを届けたい」→ Service Bus。単純キューならStorage Queue。"
+      },
+      {
+        name: "Azure Event Hub", jp: "大規模イベントストリーム", tag: "Stream",
+        oneliner: "毎秒数百万件のイベント・ログをリアルタイムで受信・バッファリングする大規模データストリーミングサービス。",
+        keywords: ["Event Hub", "ストリーミング", "IoT", "ビッグデータ", "Kafka互換"],
+        examTip: "「IoTデバイスや大量ログをリアルタイム収集・分析したい」→ Event Hub。"
+      },
+      {
+        name: "Azure Event Grid", jp: "イベント駆動型ルーティング", tag: "Event",
+        oneliner: "Azureリソースの変化イベント（Blob追加など）を検知して、他のサービス（Functions等）に即座に転送するルーター。",
+        keywords: ["Event Grid", "イベント駆動", "Pub/Sub", "トピック", "サブスクリプション"],
+        examTip: "「ファイルがアップされたらFunctionsを自動実行したい」→ Event Grid。"
+      },
+      {
+        name: "Azure Logic Apps", jp: "ローコードワークフロー自動化", tag: "Automation",
+        oneliner: "コードなしでAzure・SaaS・オンプレを結ぶ業務ワークフローをドラッグ&ドロップで構築できるツール。",
+        keywords: ["Logic Apps", "ローコード", "ワークフロー", "コネクタ", "自動化"],
+        examTip: "「Power Automateに似た感じでAzureリソースを自動連携したい」→ Logic Apps。"
+      },
+      {
+        name: "Azure API Management", jp: "APIゲートウェイ・管理", tag: "APIM",
+        oneliner: "社内外のAPIを一元管理し、認証・レート制限・変換・監視を提供するAPIゲートウェイサービス。",
+        keywords: ["APIM", "APIゲートウェイ", "レート制限", "サブスクリプションキー", "開発者ポータル"],
+        examTip: "「バックエンドAPIを外部公開、認証・流量制限を一元管理」→ API Management。"
+      },
+    ]
+  },
+];
+
+const legend = document.getElementById('legend');
+categories.forEach(cat => {
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  item.innerHTML = `<span class="legend-dot" style="background:${cat.color}"></span>${cat.icon} ${cat.name}`;
+  item.addEventListener('click', () => {
+    const el = document.getElementById('cat-' + cat.id);
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!el.classList.contains('open')) el.querySelector('.cat-header').click();
+  });
+  legend.appendChild(item);
+});
+
+const tree = document.getElementById('tree');
+categories.forEach((cat, i) => {
+  const div = document.createElement('div');
+  div.className = 'category';
+  div.id = 'cat-' + cat.id;
+  div.dataset.catId = cat.id;
+
+  const servicesHTML = cat.services.map(s => `
+    <div class="service-card"
+      data-name="${s.name.toLowerCase()}"
+      data-jp="${s.jp}"
+      data-svc='${JSON.stringify(s).replace(/'/g, "&#39;")}'>
+      <span class="svc-tap-hint">▶</span>
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-jp">${s.jp}</div>
+      <span class="svc-tag" style="background:${cat.color}22;color:${cat.color}">${s.tag}</span>
+    </div>
+  `).join('');
+
+  div.innerHTML = `
+    <div class="cat-header">
+      <div class="cat-icon" style="background:${cat.color}22; color:${cat.color}">${cat.icon}</div>
+      <div class="cat-title">
+        <div class="cat-name" style="color:${cat.color}">${cat.name}</div>
+        <div class="cat-desc">${cat.desc}</div>
+      </div>
+      <div class="cat-toggle">▼</div>
+    </div>
+    <div class="cat-body">
+      <div class="services-grid">${servicesHTML}</div>
+    </div>
+  `;
+
+  div.querySelector('.cat-header').addEventListener('click', () => div.classList.toggle('open'));
+
+  div.querySelectorAll('.service-card').forEach(card => {
+    card.addEventListener('click', () => openModal(JSON.parse(card.dataset.svc), cat));
+  });
+
+  tree.appendChild(div);
+  if (i < categories.length - 1) {
+    const conn = document.createElement('div');
+    conn.className = 'connector';
+    tree.appendChild(conn);
+  }
+});
+
+document.querySelectorAll('.category')[0].classList.add('open');
+
+const overlay = document.getElementById('modalOverlay');
+const modalEl = document.getElementById('modal');
+
+function openModal(svc, cat) {
+  document.getElementById('mCatIcon').textContent = cat.icon;
+  document.getElementById('mCatIcon').style.background = cat.color + '30';
+  document.getElementById('mName').textContent = svc.name;
+  document.getElementById('mName').style.color = cat.color;
+  document.getElementById('mJp').textContent = svc.jp;
+  document.getElementById('mOneliner').textContent = svc.oneliner;
+
+  const kGrid = document.getElementById('mKeywords');
+  kGrid.innerHTML = '';
+  svc.keywords.forEach(kw => {
+    const chip = document.createElement('span');
+    chip.className = 'keyword-chip';
+    chip.textContent = kw;
+    chip.style.background = cat.color + '18';
+    chip.style.borderColor = cat.color + '60';
+    chip.style.color = cat.color;
+    kGrid.appendChild(chip);
+  });
+
+  document.getElementById('mExamTip').textContent = svc.examTip;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+const searchInput = document.getElementById('searchInput');
+const noResult = document.getElementById('noResult');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  let anyVisible = false;
+
+  categories.forEach(cat => {
+    const catEl = document.getElementById('cat-' + cat.id);
+    const cards = catEl.querySelectorAll('.service-card');
+    let catHasMatch = false;
+    cards.forEach(card => {
+      const match = !q || card.dataset.name.includes(q) || card.dataset.jp.includes(q);
+      card.style.display = match ? '' : 'none';
+      card.classList.toggle('highlight', q && match);
+      if (match) catHasMatch = true;
+    });
+    catEl.classList.toggle('hidden', !catHasMatch);
+    if (catHasMatch) { if (q) catEl.classList.add('open'); anyVisible = true; }
+  });
+
+  noResult.style.display = anyVisible ? 'none' : 'block';
+
+  if (!q) {
+    document.querySelectorAll('.service-card').forEach(c => { c.style.display = ''; c.classList.remove('highlight'); });
+    document.querySelectorAll('.category').forEach(c => c.classList.remove('hidden'));
+    noResult.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
