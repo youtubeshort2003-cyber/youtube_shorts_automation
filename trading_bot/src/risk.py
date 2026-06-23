@@ -18,6 +18,7 @@ class RiskLimits:
     daily_loss_limit_yen: int = 5000  # 1日の最大損失（超えたら全停止）
     min_confidence: float = 0.5       # これ未満の確信度は見送り
     kill_switch_file: str = "KILL"    # このファイルが存在したら全停止
+    lot_size: int = 100               # 売買単位（日本株=100、米国株=1）
 
 
 @dataclass
@@ -76,8 +77,8 @@ def apply(decision: Decision, snapshot: dict, limits: RiskLimits,
     qty = min(qty, int(room_yen // price))
     # 現金の範囲
     qty = min(qty, int(acc.get("cash", 0) // price))
-    # 単元（100株）に丸める
-    qty = (qty // 100) * 100
+    # 売買単位に丸める（日本株=100株、米国株=1株）
+    qty = (qty // limits.lot_size) * limits.lot_size
 
     if qty <= 0:
         return Decision.hold("上限・資金により買付数量が0に制限された"), "capped_zero"

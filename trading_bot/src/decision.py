@@ -106,9 +106,10 @@ def _decide_with_rules(snapshot: dict) -> Decision:
 
     has_position = acc.get("position_qty", 0) > 0
     if not has_position and s5 > s25:
-        affordable = int(acc.get("cash", 0) // (price * 100)) * 100
+        # 1株単位で買える最大数を提案（最終的な単位丸めはリスクガードが行う）
+        affordable = int(acc.get("cash", 0) // price)
         if affordable <= 0:
-            return Decision.hold("資金不足で単元を買えない")
+            return Decision.hold("資金不足で買えない")
         return Decision(action="buy", qty=affordable,
                         reason=f"SMA5({s5})>SMA25({s25})の上抜けで押し目買い",
                         confidence=0.55)

@@ -31,7 +31,8 @@ def parse_args():
     p.add_argument("--cash", type=int, default=100000, help="初期資金（円）")
     p.add_argument("--log", default="backtest.jsonl", help="ログ出力先")
     p.add_argument("--max-order", type=int, default=100000, help="1注文の上限（円）")
-    p.add_argument("--daily-loss", type=int, default=5000, help="損失上限（円）")
+    p.add_argument("--daily-loss", type=int, default=5000, help="損失上限")
+    p.add_argument("--lot", type=int, default=100, help="売買単位（日本株=100, 米国株=1）")
     p.add_argument("--quiet", action="store_true", help="各サイクルの出力を抑制")
     return p.parse_args()
 
@@ -44,6 +45,7 @@ def main():
         max_order_yen=args.max_order,
         max_position_yen=args.cash,
         daily_loss_limit_yen=args.daily_loss,
+        lot_size=args.lot,
     )
     state = RiskState()
     log = LogBook(args.log)
