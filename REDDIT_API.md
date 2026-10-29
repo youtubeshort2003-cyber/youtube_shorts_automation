@@ -14,7 +14,8 @@ Runs once a day on the owner's own Windows PC (Task Scheduler). For each
 of ten fixed public subreddits (r/aww, r/NatureIsFuckingLit,
 r/nextfuckinglevel, r/AnimalsBeingBros, r/Eyebleach, r/likeus,
 r/MadeMeSmile, r/Unexpected, r/HumansBeingBros, r/BeAmazed) it reads the
-day's top listing (limit 25), keeps only video posts above a score
+current hot listing of each (limit set in local config), keeps only
+video posts above a score
 threshold, and writes a local JSON candidate list: post ID, subreddit,
 title, score, comment count, permalink, media URL, timestamp. A seen-ID
 file prevents duplicates across days. The owner personally reviews the
@@ -25,8 +26,9 @@ credit and link the original Reddit threads.
 
 - No posting, commenting, voting, messaging, following, or any other
   write action on Reddit.
-- No querying of user profiles or histories. Author names are not
-  stored or used. No personal data is collected.
+- No querying of user profiles or histories, and no collection of
+  personal data. A post's author name is kept only as part of that
+  post's public metadata so the original poster can be credited.
 - No sale, sharing, publication, or other redistribution of the
   collected data, and no use of the data to train AI models.
 
@@ -39,9 +41,10 @@ credit and link the original Reddit threads.
   posts stop appearing and are never re-fetched.
 - Volume: roughly 10–40 read requests per day; PRAW honours Reddit's
   rate-limit headers.
-- Identity: a descriptive User-Agent
-  (`shorts-discovery/1.0 by u/SellLucky671`) is used, and credentials
-  live in a local `.env` file that is never committed.
+- Identity: the app authenticates as the owner's own account with a
+  descriptive User-Agent identifying the tool and its owner (set in
+  local config), and credentials live in a local `.env` file that is
+  never committed.
 
 ## Why not Devvit
 
